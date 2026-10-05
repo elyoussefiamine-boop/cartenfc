@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartes NFC – prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f2;--card:#fff;--ink:#12201f;--mute:#5d6b69;--line:#d9dfdc;--field:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1514;--card:#17211f;--ink:#eaf1ef;--mute:#9bb0ac;--line:#2b3a37;--field:#101a18}}
+:root[data-theme="dark"]{--bg:#0e1514;--card:#17211f;--ink:#eaf1ef;--mute:#9bb0ac;--line:#2b3a37;--field:#101a18}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;line-height:1.4}
+.wrap{max-width:440px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:4px;background:var(--line);padding:4px;border-radius:14px;margin-bottom:16px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--mute);font:600 15px inherit;font-family:inherit;padding:10px;border-radius:10px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #f2b134;outline-offset:2px}
+h1{font-size:22px;margin:0 0 4px;font-weight:800}
+p.sub{margin:0 0 16px;color:var(--mute);font-size:14px}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);font:16px inherit;font-family:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sw{display:flex;gap:10px;margin-top:6px}
+.sw button{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+.sw button[aria-pressed="true"]{border-color:var(--ink)}
+.cta{width:100%;margin-top:20px;padding:14px;border:0;border-radius:12px;background:#12201f;color:#fff;font:700 16px inherit;font-family:inherit;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cta{background:#f2b134;color:#12201f}}
+:root[data-theme="dark"] .cta{background:#f2b134;color:#12201f}
+.code{display:flex;align-items:center;gap:10px;background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-bottom:4px}
+.code b{font-size:18px;letter-spacing:.5px}
+.code span{color:var(--mute);font-size:13px}
+.ok{display:none;margin-top:12px;padding:12px;border-radius:10px;background:#dff3e4;color:#14532d;font-weight:600;font-size:14px}
+/* fiche publique */
+.phone{background:var(--card);border-radius:24px;overflow:hidden;border:1px solid var(--line)}
+.top{background:var(--c,#0f3d3e);color:#fff;padding:28px 20px 56px}
+.top .co{font-weight:800;font-size:17px;opacity:.95}
+.av{width:92px;height:92px;border-radius:50%;background:var(--card);color:var(--c,#0f3d3e);border:4px solid var(--card);display:grid;place-items:center;font-size:34px;font-weight:800;margin:-46px 20px 0}
+.body{padding:12px 20px 24px}
+.body h2{margin:8px 0 0;font-size:26px;line-height:1.1;font-weight:800}
+.body .job{color:var(--mute);margin:4px 0 18px}
+.act{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:600;word-break:break-all}
+.act small{display:block;color:var(--mute);font-weight:400;font-size:12px}
+.add{display:block;width:100%;margin-top:12px;padding:15px;border:0;border-radius:12px;background:var(--c,#0f3d3e);color:#fff;font:700 16px inherit;font-family:inherit;cursor:pointer}
+.url{text-align:center;color:var(--mute);font-size:12px;margin:10px 0 0}
+dialog{border:0;border-radius:16px;padding:18px;max-width:380px;width:92%;background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+pre{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px;overflow-x:auto;margin:10px 0}
+dialog p{font-size:13px;color:var(--mute);margin:0}
+dialog button{margin-top:10px;padding:10px 16px;border:0;border-radius:10px;background:var(--ink);color:var(--bg);font:600 14px inherit;font-family:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t1" aria-selected="true">Créer la carte</button>
+    <button role="tab" id="t2" aria-selected="false">Fiche publique</button>
+  </div>
+
+  <section id="v1">
+    <h1>Nouvelle carte</h1>
+    <p class="sub">Scanne la carte, remplis la fiche, c'est activé.</p>
+    <div class="code"><span>Carte scannée</span><b>/c/k8f2x</b></div>
+    <label for="prenom">Prénom</label><input id="prenom" value="Sophie" autocomplete="off">
+    <label for="nom">Nom</label><input id="nom" value="Bernard" autocomplete="off">
+    <label for="poste">Poste</label><input id="poste" value="Directrice commerciale" autocomplete="off">
+    <label for="societe">Société</label><input id="societe" value="Atelier Lumière" autocomplete="off">
+    <div class="row">
+      <div><label for="tel">Téléphone</label><input id="tel" type="tel" value="+33 6 12 34 56 78"></div>
+      <div><label for="mail">Email</label><input id="mail" type="email" value="sophie@atelier-lumiere.fr"></div>
+    </div>
+    <label for="site">Site web</label><input id="site" value="atelier-lumiere.fr">
+    <label>Couleur de la société</label>
+    <div class="sw" id="sw"></div>
+    <button class="cta" id="save">Activer la carte</button>
+    <div class="ok" id="ok">Carte activée. Passe le téléphone du client sur la carte pour tester.</div>
+  </section>
+
+  <section id="v2" hidden>
+    <div class="phone" id="phone">
+      <div class="top"><div class="co" id="pCo"></div></div>
+      <div class="av" id="pAv"></div>
+      <div class="body">
+        <h2 id="pName"></h2>
+        <div class="job" id="pJob"></div>
+        <a class="act" id="pTel" href="#"><span>📞</span><span>Appeler<small id="pTelS"></small></span></a>
+        <a class="act" id="pMail" href="#"><span>✉️</span><span>Écrire<small id="pMailS"></small></span></a>
+        <a class="act" id="pSite" href="#"><span>🌐</span><span>Site web<small id="pSiteS"></small></span></a>
+        <button class="add" id="add">Ajouter aux contacts</button>
+      </div>
+    </div>
+    <p class="url">tonsite.fr/c/k8f2x</p>
+  </section>
+</div>
+
+<dialog id="dlg">
+  <strong>Fichier contact (.vcf)</strong>
+  <pre id="vcf"></pre>
+  <p>Sur ton vrai serveur, ce bouton télécharge ce fichier et l'iPhone ouvre la fenêtre « Ajouter aux contacts ». Ici, le téléchargement est désactivé dans l'aperçu.</p>
+  <button id="close">Fermer</button>
+</dialog>
+
+<script>
+var colors=['#0f3d3e','#7a1f3d','#1f3a8a','#b45309','#3f3f46'];
+var cur=colors[0];
+var $=function(i){return document.getElementById(i)};
+var sw=$('sw');
+colors.forEach(function(c,i){
+  var b=document.createElement('button');
+  b.style.background=c;b.setAttribute('aria-label','Couleur '+(i+1));
+  b.setAttribute('aria-pressed',i===0);
+  b.onclick=function(){cur=c;[].forEach.call(sw.children,function(x){x.setAttribute('aria-pressed',x===b)});render()};
+  sw.appendChild(b);
+});
+function g(i){return $(i).value.trim()}
+function render(){
+  var full=g('prenom')+' '+g('nom');
+  $('phone').style.setProperty('--c',cur);
+  $('pCo').textContent=g('societe');
+  $('pAv').textContent=((g('prenom')[0]||'')+(g('nom')[0]||'')).toUpperCase();
+  $('pName').textContent=full;
+  $('pJob').textContent=g('poste');
+  $('pTel').href='tel:'+g('tel').replace(/\s/g,'');$('pTelS').textContent=g('tel');
+  $('pMail').href='mailto:'+g('mail');$('pMailS').textContent=g('mail');
+  $('pSite').href='https://'+g('site').replace(/^https?:\/\//,'');$('pSiteS').textContent=g('site');
+}
+['prenom','nom','poste','societe','tel','mail','site'].forEach(function(i){$(i).addEventListener('input',render)});
+function show(n){
+  $('v1').hidden=n!==1;$('v2').hidden=n!==2;
+  $('t1').setAttribute('aria-selected',n===1);$('t2').setAttribute('aria-selected',n===2);
+}
+$('t1').onclick=function(){show(1)};$('t2').onclick=function(){show(2)};
+$('save').onclick=function(){render();$('ok').style.display='block';setTimeout(function(){show(2)},900)};
+$('add').onclick=function(){
+  $('vcf').textContent=['BEGIN:VCARD','VERSION:3.0','N:'+g('nom')+';'+g('prenom')+';;;','FN:'+g('prenom')+' '+g('nom'),
+  'ORG:'+g('societe'),'TITLE:'+g('poste'),'TEL;TYPE=CELL:'+g('tel'),'EMAIL:'+g('mail'),'URL:https://'+g('site'),'END:VCARD'].join('\n');
+  $('dlg').showModal();
+};
+$('close').onclick=function(){$('dlg').close()};
+render();
+</script>
+</body>
+</html>
